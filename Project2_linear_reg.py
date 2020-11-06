@@ -8,39 +8,34 @@ Created on Sun Nov  1 14:47:18 2020
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.io import loadmat
-import torch
 from sklearn import model_selection
-from toolbox_02450 import train_neural_net, draw_neural_net
-from scipy import stats
 import sklearn.linear_model as lm
-from toolbox_02450 import rlr_validate
+from Functions import rlr_validate
 
-#CHANGE optimizer = torch.optim.Adam(net.parameters(),weight_decay=1e-5)
-#IN train_neural_net BY REMOVING weight_decay TO NOT DO REGULARIZATION
-lr_ord = 2
 # Loading data
 filename = 'heart.csv'
 df = pd.read_csv(filename)
+
 # Making one-of-K encoding of categorical data
 a = pd.get_dummies(df['cp'], prefix = "cp")
 b = pd.get_dummies(df['thal'], prefix = "thal")
 c = pd.get_dummies(df['slope'], prefix = "slope")
+
 # Extracting target subdataframe from data frame
 targ = df.pop('target')
-# Concatenating current data frame and encoding one-of-k values and
+
+# Concatenating current data frame and encoded one-of-k values and
 # making sure target is the  last attribute of the data frame
 frames = [df, a, b, c, targ]
 df = pd.concat(frames, axis = 1)
+
 # Dropping original form of one-of-K encoded variables from dataframe
 df = df.drop(columns = ['cp', 'thal', 'slope'])
+
 # Getting attributes names
 attributeNames = list(df.columns)
 attNb = len(attributeNames)
-#t = attributeNames.index('target')
-#converting data to arrays
-#data = df.to_numpy()
-#X = data[:,:len(data[0,:])-1]
+
 # splitting dataframe into X and y
 X = df.drop(['target'], axis = 1).to_numpy()
 y = df.target.values.reshape((len(X),1))
