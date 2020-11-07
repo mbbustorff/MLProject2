@@ -20,17 +20,18 @@ df = pd.read_csv(filename)
 a = pd.get_dummies(df['cp'], prefix = "cp")
 b = pd.get_dummies(df['thal'], prefix = "thal")
 c = pd.get_dummies(df['slope'], prefix = "slope")
+d = pd.get_dummies(df['restecg'], prefix = "restecg")
 
 # Extracting target subdataframe from data frame
 targ = df.pop('target')
 
 # Concatenating current data frame and encoded one-of-k values and
 # making sure target is the  last attribute of the data frame
-frames = [df, a, b, c, targ]
+frames = [df, a, b, c, d, targ]
 df = pd.concat(frames, axis = 1)
 
 # Dropping original form of one-of-K encoded variables from dataframe
-df = df.drop(columns = ['cp', 'thal', 'slope'])
+df = df.drop(columns = ['cp', 'thal', 'slope', 'restecg'])
 
 # Getting attributes names
 attributeNames = list(df.columns)
