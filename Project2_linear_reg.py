@@ -43,8 +43,10 @@ y = df.target.values.reshape((len(X),1))
 #y = data[:,len(data[0,:])-1].reshape((len(X),1))
 
 #Eventually add: ,'restecg','exang','sex','fbs'
-df_reg = df[['age','oldpeak','ca','trestbps','chol']]
+#df_reg = df[['age','oldpeak','ca','trestbps','chol']]
+df_reg = df.drop(['thalach'], axis = 1)
 attributeNames_reg = list(df_reg.columns)
+
 X_reg = df_reg.to_numpy()
 y_reg = df[['thalach']].to_numpy().squeeze()
 
