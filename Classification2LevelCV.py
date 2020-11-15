@@ -51,6 +51,12 @@ X = df.drop(['target'], axis = 1).to_numpy()
 y= targ.to_numpy()
 N,M = X.shape
 
+"""
+-------------------------------------------------
+-------PHASE 2 - SET UP CROSS-VALIDATION---------
+-------------------------------------------------
+"""
+
 K1 = 10     # Outer-crossvalidation fold
 K2 = 10     # inner-crossvalidation fold
 
@@ -128,7 +134,11 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
         X_p_train = (X_p_train - mu_in) / sigma_in
         X_p_test = (X_p_test - mu_in) / sigma_in
         
-        #------------------Classification tree part--------------
+        """
+        --------------------------------------------
+        -------PHASE 3 - Classification tree---------
+        --------------------------------------------
+        """
         # Parameters for tree classifier
         # 3 complexity levels was found to be optimal
         #tree depth complexity
@@ -143,8 +153,38 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
         cltr_test_error[j] = misclass_rate_test
         
         
+        """
+        --------------------------------------------
+        -------PHASE 4 - LOGISTIC REGRESSION--------
+        --------------------------------------------
+        """
             
-        #--------------- Logistic regression part -------------------------------
+
+
+        # Fit regularized logistic regression model to training data to predict 
+        # the type of wine
+        lambda_interval = np.logspace(-8, 2, 50)
+        train_error_rate = np.zeros(len(lambda_interval))
+        test_error_rate = np.zeros(len(lambda_interval))
+        coefficient_norm = np.zeros(len(lambda_interval))
+        opt_lambda = 
+        for k in range(0, len(lambda_interval)):
+            mdl = LogisticRegression(penalty='l2', C=1/lambda_interval[k] )
+            
+            mdl.fit(X_train, y_train)
+        
+            y_train_est = mdl.predict(X_train).T
+            y_test_est = mdl.predict(X_test).T
+            
+            train_error_rate[k] = np.sum(y_train_est != y_train) / len(y_train)
+            test_error_rate[k] = np.sum(y_test_est != y_test) / len(y_test)
+        
+            w_est = mdl.coef_[0] 
+            coefficient_norm[k] = np.sqrt(np.sum(w_est**2))
+        
+        min_error = np.min(test_error_rate)
+        opt_lambda_idx = np.argmin(test_error_rate)
+        opt_lambda = lambda_interval[opt_lambda_idx]
         """
         # Concatenating 1 to account for offset (constant term) of logistic regression
         X_p_train_reg = np.concatenate((np.ones((N_in,1)),X_p_train),1)
@@ -189,15 +229,21 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
     
     # Compution test error of multiple linear regression for optimal lambda
     lr_test_error[k] = np.power(y_test.squeeze()-X_test_reg@ wopt[:,k].T,2).mean(axis=0)
-    
-    # ---------------------- Baseline Error part ----------------------------------
-    
+"""
+--------------------------------------------
+-------PHASE 5 - BASELINE---------
+--------------------------------------------
+"""
     largestClass = np.argmax(np.array([len(y_train[y_train==0]),len(y_train[y_train==1])]))
     
     misclass_rate_test = sum(largestClass != y_test.squeeze()) / (len(y_test.squeeze()))
     baseline_test_error[k] = misclass_rate_test
     
-    
+"""
+-----------------------------------------------------------
+-------PHASE 6 - STORING ERRORS + PLOTTING RESULTS---------
+-----------------------------------------------------------
+"""
  
     Lst_Baseline_test.append(baseline_test_error[k])
     Lst_ClTree_test.append(np.mean(cltr_test_error))
