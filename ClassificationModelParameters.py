@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Nov 14 20:18:19 2020
-
 @author: mbust
 """
 
@@ -146,9 +145,6 @@ from sklearn.linear_model import LogisticRegression
 df_reg = df.drop(['thalach'], axis = 1)
 attributeNames_reg = list(df_reg.columns)
 
-X_reg = df_reg.to_numpy()
-y_reg = df[['thalach']].to_numpy().squeeze()
-
 # K-fold crossvalidation
 K = 10
 CV = model_selection.KFold(n_splits=K,shuffle=True, random_state=12)
@@ -185,7 +181,7 @@ for train_index, test_index in CV.split(X):
     for j in range(0, len(lambda_interval)):
         mdl = LogisticRegression(penalty='l2', C=1/lambda_interval[j], random_state=12)
         
-        mdl.fit(X_train, y_train) #is sometimes problematic (input NaN)
+        mdl.fit(X_train, y_train) 
     
         y_train_est = mdl.predict(X_train).T
         y_test_est = mdl.predict(X_test).T
@@ -208,7 +204,7 @@ fig=plt.figure(figsize=(8,8))
 #plt.plot(np.log10(lambda_interval), train_error_rate*100)
 #plt.plot(np.log10(lambda_interval), test_error_rate*100)
 #plt.plot(np.log10(opt_lambda), min_error*100, 'o')
-plt.semilogx(lambda_interval, test_error_rate.mean(1)*100)
+plt.semilogx(lambda_interval, train_error_rate.mean(1)*100)
 plt.semilogx(lambda_interval, test_error_rate.mean(1)*100)
 plt.semilogx(opt_lambda, min_error*100, 'o')
 plt.text(1, 3, "Minimum test error: " + str(np.round(min_error*100,2)) + ' % at 1e' + str(np.round(np.log10(opt_lambda),2)),fontsize=12)
@@ -233,3 +229,4 @@ plt.show()
 print("LOGISTIC REGRESSION: ")
 lambda_answer=f"{opt_lambda:.2E}"
 print('Best error achieved is {:} for the parameter: {:}.'.format(min_error*100, lambda_answer))
+
