@@ -98,17 +98,6 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
     y_train = y[train_index]
     y_test = y[test_index]
     
-    mu_in = np.mean(X_train, 0)
-    sigma_in = np.std(X_train, 0)
-    
-    # Check if not all values of an attribute are 0, to avoid division by 0
-    for i in np.where(sigma_in==0)[0]:
-        sigma_in[i] = 1
-    
-    # Standardizing the data
-    X_train = (X_train - mu_in) / sigma_in
-    X_test = (X_test - mu_in) / sigma_in
-    
     N,M = X_train.shape
     
     CV2 = model_selection.KFold(K2, shuffle = True, random_state = 121)
@@ -124,7 +113,7 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
     
     for (j,(train_idx, test_idx)) in enumerate(CV2.split(X_train,y_train)):
         
-        print('\Inner-Crossvalidation fold: {0}/{1}'.format(j+1,K1)) 
+        print('\Inner-Crossvalidation fold: {0}/{1}'.format(j+1,K2)) 
         
         X_p_train = X_train[train_idx]
         X_p_test = X_train[test_idx]
@@ -161,27 +150,14 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
         
         for i, t in enumerate(tc):
             # Fit decision tree classifier, Gini split criterion, different pruning levels
-            dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=t)
+            dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=t, random_state=12)
             dtc = dtc.fit(X_p_train,y_p_train.ravel()) #is sometimes problematic (NaN input)
             y_est_test = dtc.predict(X_p_test)
             y_est_train = dtc.predict(X_p_train)
             # Evaluate misclassification rate over train/test data (in this CV fold)
             misclass_rate_test = np.sum(y_est_test != y_p_test) / float(len(y_est_test))
             misclass_rate_train = np.sum(y_est_train != y_p_train) / float(len(y_est_train))
-            cltr_Error_test[i,k], cltr_Error_train[i,k] = misclass_rate_test, misclass_rate_train
-        
-    ##Now that we found the optimal tc for this outer fold,
-    #We create a model using that parameter
-    tc_opt_idx=np.argmin(cltr_Error_test.mean(1))
-    tc_opt=tc[tc_opt_idx]
-    
-    # Fit decision tree classifier, Gini split criterion, different pruning levels
-    dtcO = tree.DecisionTreeClassifier(criterion='gini', max_depth=tc_opt)
-    dtcO = dtcO.fit(X_train,y_train.ravel()) 
-    y_est_test = dtcO.predict(X_test)
-    # Evaluate misclassification rate over train/test data (in this CV fold)
-    misclass_rate_test = np.sum(y_est_test != y_test) / float(len(y_p_test))
-    cltr_test_error[k] = misclass_rate_test
+            cltr_Error_test[i,j], cltr_Error_train[i,j] = misclass_rate_test, misclass_rate_train
     
         
         
@@ -200,7 +176,7 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
         y_p_train = y_train[train_idx]
         y_p_test = y_train[test_idx]
         
-        N_in = X_p_train.shape[0]
+        #N_in = X_p_train.shape[0]
         
         # Standardize the training and test set based on training set moments
         mu_in = np.mean(X_p_train, 0)
@@ -213,10 +189,11 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
         # Standardizing the data
         X_p_train = (X_p_train - mu_in) / sigma_in
         X_p_test = (X_p_test - mu_in) / sigma_in
-        train_error_rate = np.zeros((K1,K2))
-        test_error_rate = np.zeros((K1,K2))
-        coefficient_norm = np.zeros((K1,K2))
+        
         lambda_interval = np.logspace(1, 3, 10)
+        train_error_rate = np.zeros((len(lambda_interval),K2))
+        test_error_rate = np.zeros((len(lambda_interval),K2))
+        #coefficient_norm = np.zeros((K1,K2))
         
         for i in range(0, len(lambda_interval)):
             mdl = LogisticRegression(penalty='l2', C=1/lambda_interval[i], random_state=12)
@@ -229,16 +206,47 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
             train_error_rate[i,j] = np.sum(y_train_est != y_p_train) / len(y_p_train)
             test_error_rate[i,j] = np.sum(y_test_est != y_p_test) / len(y_p_test)
         
+    
+    #----------------------------Standardizing data ---------------------
+    
+    mu_in = np.mean(X_train, 0)
+    sigma_in = np.std(X_train, 0)
+    
+    # Check if not all values of an attribute are 0, to avoid division by 0
+    for i in np.where(sigma_in==0)[0]:
+        sigma_in[i] = 1
+    
+    # Standardizing the data
+    X_train = (X_train - mu_in) / sigma_in
+    X_test = (X_test - mu_in) / sigma_in
+    
+    #------------------------ Tree ------------------------------------------
+    
+    ##Now that we found the optimal tc for this outer fold,
+    #We create a model using that parameter
+    tc_opt_idx=np.argmin(cltr_Error_test.mean(1))
+    tc_opt=tc[tc_opt_idx]
+    
+    # Fit decision tree classifier, Gini split criterion, different pruning levels
+    dtcO = tree.DecisionTreeClassifier(criterion='gini', max_depth=tc_opt, random_state = 12)
+    dtcO = dtcO.fit(X_train,y_train.ravel()) 
+    y_est_test = dtcO.predict(X_test)
+    # Evaluate misclassification rate over train/test data (in this CV fold)
+    misclass_rate_test_tr = np.sum(y_est_test != y_test) / float(len(y_p_test))
+    cltr_test_error[k] = misclass_rate_test_tr
+    
+    #-------------------- Logistic Regression ---------------------------------
+    
     lambda_opt_idx=np.argmin(test_error_rate.mean(1))
     lambda_opt=lambda_interval[lambda_opt_idx]
     
-    mdlO = LogisticRegression(penalty='l2', C=1/lambda_opt)
+    mdlO = LogisticRegression(penalty='l2', C=1/lambda_opt, random_state=12)
     mdlO.fit(X_train, y_train)
 
     y_test_est = mdlO.predict(X_test).T
-    misclass_rate_test = np.sum(y_test_est != y_test) / float(len(y_test))
+    misclass_rate_test_lg = np.sum(y_test_est != y_test) / float(len(y_test))
     
-    lr_test_error[k] = misclass_rate_test
+    lr_test_error[k] = misclass_rate_test_lg
         
        
     """

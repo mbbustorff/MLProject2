@@ -82,8 +82,8 @@ CV = model_selection.KFold(K, shuffle=True)
 #CV = model_selection.KFold(K, shuffle=False)
 
 # Values of lambda
-lambdas = np.power(10.,range(-5,9))
-#lambdas = np.linspace(0e-2,1000,1000)
+#lambdas = np.power(10.,range(-5,9))
+lambdas = np.linspace(1e-2,1000,1000)
 
 # Initialize variables
 #T = len(lambdas)
