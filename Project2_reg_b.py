@@ -46,8 +46,8 @@ X = df.drop(['thalach'], axis = 1).to_numpy()
 y = df[['thalach']].to_numpy().reshape((len(X),1))
 #y = data[:,len(data[0,:])-1].reshape((len(X),1))
 
-K1 = 10     # Outer-crossvalidation fold
-K2 = 10     # inner-crossvalidation fold
+K1 = 2     # Outer-crossvalidation fold
+K2 = 2     # inner-crossvalidation fold
 
 CV = model_selection.KFold(K1, shuffle = True, random_state = 12)
 
@@ -119,7 +119,7 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
         sigma_in = np.std(X_p_train, 0)
         
         # Check if not all values of an attribute are 0, to avoid division by 0
-        for i in np.where(mu_in==0)[0]:
+        for i in np.where(sigma_in==0)[0]:
             sigma_in[i] = 1
         
         # Standardizing the data
@@ -206,7 +206,7 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
     sigma = np.std(X_train, 0)
         
     # Check if not all values of an attribute are 0, to avoid division by 0
-    for i in np.where(mu == 0)[0]:
+    for i in np.where(sigma == 0)[0]:
         sigma[i] = 1
         
     # Standardizing the data

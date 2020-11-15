@@ -81,21 +81,21 @@ for train_index, test_index in CV.split(X):
     print('Computing CV fold: {0}/{1}..'.format(k+1,K))
 
     # extract training and test set for current CV fold
-    X_train, y_train = X[train_index,:], y[train_index]
-    X_test, y_test = X[test_index,:], y[test_index]
+    X_train, y_train = X[train_index], y[train_index]
+    X_test, y_test = X[test_index], y[test_index]
     
     # Standardize outer fold based on training set
-    mu = np.mean(X_train[:, 1:], 0)
-    sigma = np.std(X_train[:, 1:], 0)
+    mu = np.mean(X_train, 0)
+    sigma = np.std(X_train, 0)
     sigmabis=np.copy(sigma)
     
-    X_train[:, 1:] = (X_train[:, 1:] - mu ) / sigma
-    X_test[:, 1:] = (X_test[:, 1:] - mu ) / sigma
-    
-    
     for i in np.where(sigma==0)[0]:
-            sigma[i] = 1
+        sigma[i] = 1
             
+    
+    X_train = (X_train - mu ) / sigma
+    X_test = (X_test - mu ) / sigma
+    
     for i, t in enumerate(tc):
         # Fit decision tree classifier, Gini split criterion, different pruning levels
         dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=t)
@@ -154,45 +154,46 @@ K = 10
 CV = model_selection.KFold(n_splits=K,shuffle=True, random_state=12)
 
 k=0
+Y_test = []
+Y_test_est = []
+
+# Fit regularized logistic regression model to training data to predict 
+# the type of wine
+#lambda_interval = np.logspace(-8, 2, 50)
+lambda_interval = np.logspace(-4, 6, 50)
+train_error_rate = np.empty((len(lambda_interval),K))
+test_error_rate = np.empty((len(lambda_interval),K))
+coefficient_norm = np.empty((len(lambda_interval),K))
+
 for train_index, test_index in CV.split(X):
     print('Computing CV fold: {0}/{1}..'.format(k+1,K))
 
     # extract training and test set for current CV fold
-    X_train, y_train = X[train_index,:], y[train_index]
-    X_test, y_test = X[test_index,:], y[test_index]
+    X_train, y_train = X[train_index], y[train_index]
+    X_test, y_test = X[test_index], y[test_index]
     
     # Standardize outer fold based on training set
-    mu = np.mean(X_train[:, 1:], 0)
-    sigma = np.std(X_train[:, 1:], 0)
-    
-    X_train[:, 1:] = (X_train[:, 1:] - mu ) / sigma
-    X_test[:, 1:] = (X_test[:, 1:] - mu ) / sigma
-    
+    mu = np.mean(X_train, 0)
+    sigma = np.std(X_train, 0) 
     
     for i in np.where(sigma==0)[0]:
             sigma[i] = 1
+   
+    X_train = (X_train - mu ) / sigma
+    X_test = (X_test - mu ) / sigma
     
-    # Add offset attribute
-    X_reg = np.concatenate((np.ones((X_reg.shape[0],1)),X_reg),1)
-    attributeNames_reg = [u'Offset']+attributeNames_reg
-    M = M+1
-    
-    # Fit regularized logistic regression model to training data to predict 
-    # the type of wine
-    lambda_interval = np.logspace(-8, 2, 50)
-    train_error_rate = np.empty((len(lambda_interval),K))
-    test_error_rate = np.empty((len(lambda_interval),K))
-    coefficient_norm = np.empty((len(lambda_interval),K))
     for j in range(0, len(lambda_interval)):
-        mdl = LogisticRegression(penalty='l2', C=1/lambda_interval[j], random_state=10 )
+        mdl = LogisticRegression(penalty='l2', C=1/lambda_interval[j], random_state=12)
         
         mdl.fit(X_train, y_train) #is sometimes problematic (input NaN)
     
         y_train_est = mdl.predict(X_train).T
         y_test_est = mdl.predict(X_test).T
         
-        train_error_rate[j,k] = np.sum(y_train_est != y_train) / float(len(y_train_est))
-        test_error_rate[j,k] = np.sum(y_test_est != y_test) / float(len(y_test_est))
+        Y_test.append(y_test)
+        Y_test_est.append(y_test_est)
+        train_error_rate[j,k] = np.sum(y_train_est != y_train) / len(y_train)
+        test_error_rate[j,k] = np.sum(y_test_est != y_test) / len(y_test)
     
         w_est = mdl.coef_[0] 
         coefficient_norm[j] = np.sqrt(np.sum(w_est**2))
@@ -210,13 +211,14 @@ fig=plt.figure(figsize=(8,8))
 plt.semilogx(lambda_interval, test_error_rate.mean(1)*100)
 plt.semilogx(lambda_interval, test_error_rate.mean(1)*100)
 plt.semilogx(opt_lambda, min_error*100, 'o')
-plt.text(1e-8, 3, "Minimum test error: " + str(np.round(min_error*100,2)) + ' % at 1e' + str(np.round(np.log10(opt_lambda),2)))
-plt.xlabel('Regularization strength, $\log_{10}(\lambda)$')
-plt.ylabel('Error rate (%)')
-plt.title('Classification error')
-plt.legend(['Training error','Test error','Test minimum'],loc='upper right')
+plt.text(1, 3, "Minimum test error: " + str(np.round(min_error*100,2)) + ' % at 1e' + str(np.round(np.log10(opt_lambda),2)),fontsize=12)
+plt.xlabel('Regularization strength, $\log_{10}(\lambda)$', fontsize=12)
+plt.ylabel('Error rate (%)', fontsize=12)
+plt.title('Classification error', fontsize=12)
+plt.legend(['Training error','Test error','Test minimum'],loc='upper right',fontsize=12)
 plt.ylim([0, 30])
 plt.grid()
+#plt.tight_layout()
 plt.show()  
 fig.savefig('plot.pdf')  
 """

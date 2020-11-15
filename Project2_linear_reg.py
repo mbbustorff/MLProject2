@@ -62,7 +62,7 @@ residual = y_est-y_reg
 plt.figure()
 plt.subplot(2,1,1)
 plt.plot(y_reg, y_est, '.')
-plt.xlabel('Alcohol content (true)'); plt.ylabel('Alcohol content (estimated)');
+plt.xlabel('thalach (true)',fontsize=12); plt.ylabel('thalach (estimated)',fontsize=12);
 plt.subplot(2,1,2)
 plt.hist(residual,40)
 
@@ -77,7 +77,7 @@ M = M+1
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
-K = 5
+K = 10
 CV = model_selection.KFold(K, shuffle=True)
 #CV = model_selection.KFold(K, shuffle=False)
 
@@ -149,19 +149,19 @@ for train_index, test_index in CV.split(X_reg,y_reg):
         plt.figure(k, figsize=(12,8))
         plt.subplot(1,2,1)
         plt.semilogx(lambdas,mean_w_vs_lambda.T[:,1:],'.-') # Don't plot the bias term
-        plt.xlabel('Regularization factor')
-        plt.ylabel('Mean Coefficient Values')
+        plt.xlabel('Regularization factor',fontsize=12)
+        plt.ylabel('Mean Coefficient Values',fontsize=12)
         plt.grid()
         # You can choose to display the legend, but it's omitted for a cleaner 
         # plot, since there are many attributes
         #legend(attributeNames[1:], loc='best')
         
         plt.subplot(1,2,2)
-        plt.title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)))
+        plt.title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)),fontsize=12)
         plt.loglog(lambdas,train_err_vs_lambda.T,'b.-',lambdas,test_err_vs_lambda.T,'r.-')
-        plt.xlabel('Regularization factor')
-        plt.ylabel('Squared error (crossvalidation)')
-        plt.legend(['Train error','Validation error'])
+        plt.xlabel('Regularization factor',fontsize=12)
+        plt.ylabel('Squared error (crossvalidation)',fontsize=12)
+        plt.legend(['Train error','Validation error'],fontsize=12)
         plt.grid()
     
     # To inspect the used indices, use these print statements
@@ -170,7 +170,7 @@ for train_index, test_index in CV.split(X_reg,y_reg):
     #print('Test indices: {0}\n'.format(test_index))
 
     k+=1
-
+plt.savefig('C:/Users/cleml/Documents/02450 Introduction to Machine Learning and Data Mining/Project 2/Mlr_w_regularization.pdf',bbox_inches='tight')
 plt.show()
 # Display results
 print('Linear regression without feature selection:')
