@@ -107,26 +107,29 @@ for train_index, test_index in CV.split(X):
         Error_test[i,k], Error_train[i,k] = misclass_rate_test, misclass_rate_train
     k+=1
 
+best_error_test_index=np.argmin(Error_test.mean(1))
+best_error_test_value=Error_test.mean(1)[best_error_test_index]
+best_error_test_parameter=tc[best_error_test_index]
+
 #Plot results
 f = figure()
 boxplot(Error_test.T)
-xlabel('Model complexity (max tree depth)')
-ylabel('Test error across CV folds, K={0})'.format(K))
-
+xlabel('Model complexity (max tree depth)',fontsize=12)
+ylabel('Test error across CV folds, K={0})'.format(K), fontsize=12)
+f.savefig("treeBoxPlot.pdf")
 
 f = figure()
 plot(tc, Error_train.mean(1))
 plot(tc, Error_test.mean(1))
-xlabel('Model complexity (max tree depth)')
-ylabel('Error (misclassification rate, CV K={0})'.format(K))
+xlabel('Model complexity (max tree depth)',fontsize=12)
+ylabel('Error (misclassification rate, CV K={0})'.format(K),fontsize=12)
+plt.text(5.2,0.31, "Minimum test error: " + str(np.round(best_error_test_value*100,2)) + ' % at max depth ' + str(best_error_test_parameter),fontsize=12)
 legend(['Error_train','Error_test'])
+f.savefig("ClassTree.pdf")
     
 show()
 
 #print the best results
-best_error_test_index=np.argmin(Error_test.mean(1))
-best_error_test_value=Error_test.mean(1)[best_error_test_index]
-best_error_test_parameter=tc[best_error_test_index]
 
 print("CLASSIFICATION TREE: ")
 print('Best error achieved is {:} for the parameter: {:}.'.format(best_error_test_value,best_error_test_parameter))
@@ -216,16 +219,18 @@ plt.ylim([0, 30])
 plt.grid()
 #plt.tight_layout()
 plt.show()  
-fig.savefig('plot.pdf')  
-"""
-plt.figure(figsize=(8,8))
+fig.savefig('logisticReg.pdf')  
+
+
+fig=plt.figure(figsize=(8,8))
 plt.semilogx(lambda_interval, coefficient_norm,'k')
-plt.ylabel('L2 Norm')
-plt.xlabel('Regularization strength, $\log_{10}(\lambda)$')
+plt.ylabel('L2 Norm',fontsize=12)
+plt.xlabel('Regularization strength, $\log_{10}(\lambda)$',fontsize=12)
 plt.title('Parameter vector L2 norm')
 plt.grid()
 plt.show()    
-"""
+fig.savefig("lambdaParam.pdf")
+
 print("LOGISTIC REGRESSION: ")
 lambda_answer=f"{opt_lambda:.2E}"
 print('Best error achieved is {:} for the parameter: {:}.'.format(min_error*100, lambda_answer))
