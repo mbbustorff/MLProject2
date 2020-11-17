@@ -437,3 +437,13 @@ def setupI_reg(y_true, yhatA, yhatB, L1_Loss, alpha=0.05):
     p = st.t.cdf( -np.abs( np.mean(z) )/st.sem(z), df=len(z)-1)  # p-value
 
     return CIA, CIB, CI, p
+
+def correlated_ttest(r, rho, alpha=0.05):
+    rhat = np.mean(r)
+    shat = np.std(r)
+    J = len(r)
+    sigmatilde = shat * np.sqrt(1 / J + rho / (1 - rho))
+
+    CI = st.t.interval(1 - alpha, df=J - 1, loc=rhat, scale=sigmatilde)  # Confidence interval
+    p = 2*st.t.cdf(-np.abs(rhat) / sigmatilde, df=J - 1)  # p-value
+    return p, CI

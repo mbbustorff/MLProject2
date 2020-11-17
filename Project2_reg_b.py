@@ -46,8 +46,8 @@ X = df.drop(['thalach'], axis = 1).to_numpy()
 y = df[['thalach']].to_numpy().reshape((len(X),1))
 #y = data[:,len(data[0,:])-1].reshape((len(X),1))
 
-K1 = 2     # Outer-crossvalidation fold
-K2 = 2     # inner-crossvalidation fold
+K1 = 10     # Outer-crossvalidation fold
+K2 = 10     # inner-crossvalidation fold
 
 CV = model_selection.KFold(K1, shuffle = True, random_state = 12)
 
@@ -96,7 +96,8 @@ for (k, (train_index, test_index)) in enumerate(CV.split(X,y)):
     # Parameters for neural network classifier
     # 3 hidden units was found to be optimal
     #n_hidden_units = [1]
-    n_hidden_units = np.arange(1,5,1)      #range of numbers of hidden units
+    #n_hidden_units = np.arange(1,5,1)      #range of numbers of hidden units
+    n_hidden_units = np.arange(6,15,1)
     n_replicates = 1        # number of networks trained in each k-fold
     max_iter = 100000        # number of iterations of gradient descent
     # Array to store average test error of each trained neural network 
